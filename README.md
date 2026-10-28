@@ -46,12 +46,12 @@
 
 ## 环境与工具
 
-| 端 | 环境 |
-| --- | --- |
-| 模型训练 | Ubuntu22.04（VMware）/ Miniconda + Python3.10 + ultralytics |
-| 采集端 | Ubuntu22.04 交叉编译（arm-rockchip830 工具链）+ MobaXterm + RV1106 凌智视觉模块 |
-| 服务端 | Ubuntu22.04 + MySQL 8.0 + C++（epoll/线程池/mysqlclient） |
-| 客户端 | Qt Creator + Qt 网络模块（Ubuntu/Windows 双系统兼容） |
+| 端    | 环境                                                               |
+| ---- | ---------------------------------------------------------------- |
+| 模型训练 | Ubuntu22.04（VMware）/ Miniconda + Python3.10 + ultralytics        |
+| 采集端  | Ubuntu22.04 交叉编译（arm-rockchip830 工具链）+ MobaXterm + RV1106 凌智视觉模块 |
+| 服务端  | Ubuntu22.04 + MySQL 8.0 + C++（epoll/线程池/mysqlclient）             |
+| 客户端  | Qt Creator + Qt 网络模块（Ubuntu/Windows 双系统兼容）                       |
 
 ## 快速开始（模型部分）
 
@@ -69,15 +69,15 @@ python convert.py best.onnx rv1106 i8 tongue.rknn
 
 ## 串口通信协议（摘要）
 
-- 下行（PC → RV1106）：`0x5A | CMD_H | CMD_L | 0xA5`，指令含停止视频/仅播放/单帧推理/连续推理
+|   |   |   |   |
+| - | - | - | - |
+
+- 下行（PC → RV1106）：`0x5A | CMD_H | CMD_L | 0xA5`，指令含停止视频/仅播放/单帧推理/连续推理  
+  |  |  |  |  |  |  |  
+  | --- | --- | --- | --- | --- | --- |
 - 上行（RV1106 → PC）：`0x5B | CMD_H | CMD_L | 类别码 | 置信度 | 0xA5`，类别码 0x00~0x04 对应灰黑苔/镜面舌/薄白苔/白腻苔/黄腻苔，0xFF 表示异常
 - 串口参数：115200 8N1；详见 `docs/RV1106串口通信协议说明.md`
 
 ## 数据库
 
 `docs/zysms_db.sql` 一键建库 `zysms_db`（utf8mb4），含患者、工作人员、科室、排班、舌苔检测记录、预约、诊疗记录、处方、系统配置、系统日志共 10 张表，附联调测试数据（默认密码 123456 的 MD5）。
-
-## 说明
-
-- 进度跟踪表、项目工作日报、项目手册等内部管理文档不随仓库分发（见 `.gitignore`）
-- RV1106 厂商资料包与训练数据集体积过大，仅保留在本地
