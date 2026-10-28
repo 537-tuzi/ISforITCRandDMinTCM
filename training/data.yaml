@@ -1,0 +1,12 @@
+# -*- coding: utf-8 -*-
+path: /home/ma-user/work
+train: train
+val: val
+test: test
+nc: 5
+names:
+  0: 灰黑苔
+  1: 镜面舌
+  2: 薄白苔
+  3: 白腻苔
+  4: 黄腻苔 
