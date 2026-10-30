@@ -3,6 +3,7 @@
 #include "util/Toast.h"
 #include "Dialogs.h"
 #include "util/UIFactory.h"
+#include "util/AppDefs.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -12,6 +13,9 @@
 #include <QPushButton>
 #include <QHeaderView>
 #include <QBrush>
+#include <QResizeEvent>
+#include <QtGlobal>
+#include <QtMath>
 
 RecordView::RecordView(QWidget* parent) : QWidget(parent)
 {
@@ -49,8 +53,8 @@ RecordView::RecordView(QWidget* parent) : QWidget(parent)
     r.conf = QStringLiteral("90%"); r.when = QStringLiteral("2026-07-15 08:10");
     m_visits.append(r);
 
-    // ===== 左侧信息面板（三页统一齐全版：手机号+建档状态） =====
-    m_panel = new InfoPanel(true, true);
+    // ===== 左侧信息面板 =====
+    m_panel = new InfoPanel;
     connect(m_panel, &InfoPanel::logoutClicked, this, &RecordView::logoutClicked);
     root->addWidget(m_panel);
 
@@ -144,16 +148,17 @@ RecordView::RecordView(QWidget* parent) : QWidget(parent)
     root->addWidget(main, 1);
 }
 
-void RecordView::setProfile(const QString& gm, const QString& jw)
-{ m_panel->setProfile(gm, jw); }
+/* 窗口比例变化：按 UiScale 同一因子调整本页内部尺寸（面板宽 + 表格行高） */
+void RecordView::resizeEvent(QResizeEvent* ev)
+{
+    QWidget::resizeEvent(ev);
+    if (!m_panel || !m_table) return;
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    m_panel->setFixedWidth(qRound(def::PANEL_W * s));
+    applyRowHeight(qRound(def::TBL_ROW_H * s));
+}
 
-void RecordView::setJdDone(bool done)
-{ m_panel->setJdDone(done); }     // 左面板建档状态同步（三页一致）
-
-void RecordView::setPanelWidth(int w)
-{ m_panel->setFixedWidth(w); }
-
-void RecordView::setRowHeight(int h)
+void RecordView::applyRowHeight(int h)
 {
     for (int i = 0; i < m_table->rowCount(); ++i)
         m_table->setRowHeight(i, h);

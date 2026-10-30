@@ -30,7 +30,7 @@ void Toast::show(QWidget* window, const QString& msg, bool warn)
         QObject::connect(g_fade, &QPropertyAnimation::finished, g_toast, &QWidget::hide);
         g_hide = new QTimer(g_toast);
         g_hide->setSingleShot(true);
-        QObject::connect(g_hide, &QTimer::timeout, g_toast, [g_fade] { g_fade->start(); });
+        QObject::connect(g_hide, &QTimer::timeout, g_toast, [] { g_fade->start(); });
     }
 
     g_toast->setParent(window);            // 跟随当前窗口（登录窗/主窗）

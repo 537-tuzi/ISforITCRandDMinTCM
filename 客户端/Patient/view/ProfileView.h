@@ -15,8 +15,6 @@ class ProfileView : public QWidget
 public:
     explicit ProfileView(QWidget* parent = nullptr);
 
-    void setProfile(const QString& gm, const QString& jw);   // 保存后同步面板
-
 signals:
     void profileSaved(const QString& gm, const QString& jw); // WinManager 做全局状态切换
 

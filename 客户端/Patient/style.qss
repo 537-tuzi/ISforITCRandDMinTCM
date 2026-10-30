@@ -114,10 +114,8 @@ QLineEdit::placeholder, QPlainTextEdit::placeholder { color:#a9a698; }
     background:transparent; padding:0 8px;   /* 字号对齐导航按钮 */
 }
 
-/* ==================== 左侧个人信息面板（190px，值长自动换行） ==================== */
+/* ==================== 左侧个人信息面板（170px，四项统一堆叠式） ==================== */
 #pcard { background:#ffffff; border:1px solid #e5e3da; border-radius:10px; }
-#pname { font-size:20px; font-weight:700; color:#262620; background:transparent; }
-#psub  { font-size:15px; color:#74746a; background:transparent; }
 #prowWrap { background:transparent; border-bottom:1px solid #f0efe8; }
 #prowKey { font-size:15.5px; font-weight:600; color:#5f5f56; background:transparent; }
 #prowVal { font-size:17px; font-weight:600; color:#262620; background:transparent; }
@@ -204,9 +202,6 @@ QLineEdit::placeholder, QPlainTextEdit::placeholder { color:#a9a698; }
 #ctr { background:transparent; border-top:3px solid #78ddb4; border-right:3px solid #78ddb4; }
 #cbl { background:transparent; border-bottom:3px solid #78ddb4; border-left:3px solid #78ddb4; }
 #cbr { background:transparent; border-bottom:3px solid #78ddb4; border-right:3px solid #78ddb4; }
-#stat { background:#f7f8f4; border:1px solid #e5e3da; border-radius:8px; }
-#statTitle { font-size:15px; color:#74746a; background:transparent; }
-#statVal   { font-size:21px; font-weight:700; color:#262620; background:transparent; }
 #repBody { font-size:17px; color:#33332c; background:transparent; }
 
 /* 提示条（红=警示 / 绿=说明） */

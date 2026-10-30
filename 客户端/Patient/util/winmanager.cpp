@@ -9,7 +9,15 @@
 #include "UiScale.h"
 #include "AppDefs.h"
 #include <QTimer>
+#include <QApplication>
 #include <QtGlobal>
+
+WinManager* WinManager::instance()
+{
+    // 父对象 qApp：随 QApplication 析构，避免静态对象在应用销毁后残留
+    static WinManager* s_inst = new WinManager(qApp);
+    return s_inst;
+}
 
 WinManager::WinManager(QObject* parent) : QObject(parent)
 {
@@ -79,16 +87,14 @@ void WinManager::navTo(pd::Page page)
     m_main->setCurrent(page);
 }
 
-// 建档保存（MD §13.2）：全局状态切换 + 三页面板同步 + 1.2s 后回首页
+// 建档保存（MD §13.2）：全局状态切换 + 入口转"我的档案" + 1.2s 后回首页
+// 2026-10-30：信息栏只剩静态四项，过敏史/既往病史/建档状态不再向面板同步（值留给 service 层入库）
 void WinManager::onProfileSaved(const QString& gm, const QString& jw)
 {
-    m_jdDone = true;                              // 全局状态：已建档
-    m_main->home()->setProfile(gm, jw);           // 三页面板同步
-    m_main->detect()->setProfile(gm, jw);
-    m_main->record()->setProfile(gm, jw);
-    m_main->home()->setJdDone(true);              // 首页入口转"我的档案"
-    m_main->detect()->setJdDone(true);            // 三页建档状态一致
-    m_main->record()->setJdDone(true);
+    Q_UNUSED(gm);
+    Q_UNUSED(jw);
+    m_jdDone = true;                               // 全局状态：已建档
+    m_main->home()->setJdDone(true);               // 首页入口转"我的档案"
     m_main->setJdTitle(QStringLiteral("我的档案")); // 导航改名
     QTimer::singleShot(def::PROFILE_BACK_MS, this, [this] { navTo(pd::Page::Home); });
 }

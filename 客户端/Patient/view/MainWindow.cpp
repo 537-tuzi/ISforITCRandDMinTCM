@@ -100,20 +100,15 @@ void MainWindow::setJdTitle(const QString& title)
     m_navJd->setText(title);
 }
 
-/* 窗口放大（如最大化）时按宽度比例放大内容：全局样式、导航条高、
-   左侧面板宽、表格行高同步缩放；总因子 = 字体补偿 × 窗口比例 */
+/* 窗口放大（如最大化）时按宽度比例放大：本类只管全局样式与导航条高；
+   各页面在自身 resizeEvent 里按同一因子调整自己的内部尺寸（控制反转，
+   本类不伸手进 View 内部），总因子 = 字体补偿 × 窗口比例 */
 void MainWindow::resizeEvent(QResizeEvent* ev)
 {
     QWidget::resizeEvent(ev);
-    if (!m_bar || !m_home || !m_detect || !m_record)
-        return;                          // 构造早期的 resize，成员未就绪
+    if (!m_bar) return;                  // 构造早期的 resize，成员未就绪
     const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
     if (qAbs(s - UiScale::current()) > 0.02)   // 阈值防拖拽抖动频繁重排
         UiScale::apply(s);
-    m_bar->setFixedHeight(qRound(64 * s));
-    const int pw = qRound(170 * s);
-    m_home->setPanelWidth(pw);
-    m_detect->setPanelWidth(pw);
-    m_record->setPanelWidth(pw);
-    m_record->setRowHeight(qRound(52 * s));
+    m_bar->setFixedHeight(qRound(def::TOPBAR_H * s));
 }

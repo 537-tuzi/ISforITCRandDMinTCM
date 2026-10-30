@@ -10,6 +10,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QLayout>
+#include <QResizeEvent>
+#include <QtGlobal>
+#include <QtMath>
 
 HomeView::HomeView(QWidget* parent) : QWidget(parent)
 {
@@ -19,7 +22,7 @@ HomeView::HomeView(QWidget* parent) : QWidget(parent)
     root->setSpacing(8);
 
     // ===== 左侧个人信息面板 =====
-    m_panel = new InfoPanel(true, true);
+    m_panel = new InfoPanel;
     connect(m_panel, &InfoPanel::logoutClicked, this, &HomeView::logoutRequested);
     root->addWidget(m_panel);
 
@@ -184,15 +187,17 @@ void HomeView::addAppointment(const pd::Appointment& appt, bool autoBook)
     refreshTodos();
 }
 
-void HomeView::setProfile(const QString& gm, const QString& jw)
-{ m_panel->setProfile(gm, jw); }
-
-void HomeView::setPanelWidth(int w)
-{ m_panel->setFixedWidth(w); }
+/* 窗口比例变化：按 UiScale 同一因子调整本页内部尺寸（面板宽） */
+void HomeView::resizeEvent(QResizeEvent* ev)
+{
+    QWidget::resizeEvent(ev);
+    if (!m_panel) return;
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    m_panel->setFixedWidth(qRound(def::PANEL_W * s));
+}
 
 void HomeView::setJdDone(bool done)
 {
-    m_panel->setJdDone(done);
     if (done) {
         // 建档完成后入口转"我的档案"（手册表 3：支持手动修正）
         m_cellTitle->setText(QStringLiteral("我的档案"));

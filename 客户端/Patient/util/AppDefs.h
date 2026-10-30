@@ -24,6 +24,12 @@ inline const QString DEMO_SLOT    = QStringLiteral("晚班 19:00-21:00"); // 自
 // 视觉尺寸补偿基线：换字体时若字形偏小/偏大可整体调整（1.0 = 不补偿）
 constexpr qreal FONT_COMP = 1.0;
 
+// ---- 布局基准（800×640 设计稿的代码侧固定尺寸；随 UiScale 因子等比放大）----
+constexpr int TOPBAR_H  = 64;    // 顶部导航条高
+constexpr int PANEL_W   = 170;   // 左侧信息面板宽
+constexpr int TBL_ROW_H = 52;    // 记录页表格行高
+constexpr int MODAL_W   = 560;   // 弹窗宽
+
 // ---- 时序参数 ----
 constexpr int AI_REPLY_MS      = 500;   // 建档 AI 回复延迟
 constexpr int DETECT_ANIM_MS   = 1800;  // 舌苔检测演示时长（正式版：串口超时 10s）

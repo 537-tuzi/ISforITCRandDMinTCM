@@ -19,10 +19,6 @@ class DetectView : public QWidget
 public:
     explicit DetectView(QWidget* parent = nullptr);
 
-    void setProfile(const QString& gm, const QString& jw);   // 过敏史/既往病史同步到左面板
-    void setJdDone(bool done);                               // 建档状态同步到左面板
-    void setPanelWidth(int w);                               // 窗口放大时左面板同步加宽
-
 signals:
     // 挂号成功 -> 首页待办同步（autoBook=true 为重症自动预约）
     void appointmentAdded(const pd::Appointment& appt, bool autoBook);
@@ -34,17 +30,16 @@ private slots:
     void onBook();          // 手动预约（四级联动弹窗）
     void tickScan();        // 扫描线动画
 
+protected:
+    void resizeEvent(QResizeEvent* ev) override;   // 随窗口比例调面板宽
+
 private:
     QWidget* makeStep(int n, const QString& text);
-    QFrame* makeStat(const QString& title, QLabel** val);
     void clearResult();     // 结果区恢复默认态（再检测一次用）
     void placeCorners();    // 摄像头画面四角取景框摆位
     bool eventFilter(QObject* obj, QEvent* ev) override;
 
     InfoPanel* m_panel = nullptr;
-    QLabel* m_type = nullptr;
-    QLabel* m_state = nullptr;
-    QLabel* m_conf  = nullptr;
     QLabel* m_repBody = nullptr;
     QLabel* m_repNote = nullptr;
     QFrame* m_repCard = nullptr;

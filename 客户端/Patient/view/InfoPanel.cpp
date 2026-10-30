@@ -5,14 +5,7 @@
 #include <QLabel>
 #include <QPushButton>
 
-static QWidget* makeRow(const QString& key, QLabel** val)
-{
-    // 堆叠式：标签在上、值在下（值可换行），面板可以收窄；实现走 util 工厂
-    return uif::makeStackedRow(key, QStringLiteral("prowWrap"),
-                               QStringLiteral("prowKey"), QStringLiteral("prowVal"), val);
-}
-
-InfoPanel::InfoPanel(bool showPhone, bool showStatus, QWidget* parent) : QWidget(parent)
+InfoPanel::InfoPanel(QWidget* parent) : QWidget(parent)
 {
     setFixedWidth(170);
     QVBoxLayout* root = new QVBoxLayout(this);
@@ -25,40 +18,18 @@ InfoPanel::InfoPanel(bool showPhone, bool showStatus, QWidget* parent) : QWidget
     c->setContentsMargins(16, 18, 16, 16);
     c->setSpacing(0);
 
-    QLabel* name = new QLabel(QStringLiteral("李建国"));
-    name->setObjectName("pname");
-    name->setAlignment(Qt::AlignCenter);
-    c->addWidget(name);
-    QLabel* sub = new QLabel(QStringLiteral("男 · 52 岁"));
-    sub->setObjectName("psub");
-    sub->setAlignment(Qt::AlignCenter);
-    c->addWidget(sub);
-    c->addSpacing(4);
-
-    QLabel* yb = nullptr;
-    c->addWidget(makeRow(QStringLiteral("医保账号"), &yb));
-    if (yb) yb->setText(QStringLiteral("DYB****8823"));
-    if (showPhone) {
-        QLabel* ph = nullptr;
-        c->addWidget(makeRow(QStringLiteral("手机号"), &ph));
-        if (ph) ph->setText(QStringLiteral("139****6677"));
-    }
-    c->addWidget(makeRow(QStringLiteral("过敏史"), &m_gm));
-    c->addWidget(makeRow(QStringLiteral("既往病史"), &m_jw));
-    if (showStatus) {
-        // 建档状态堆叠行；纯文字展示（2026-10-30 决定：去掉绿色胶囊特效）
-        QWidget* w = new QWidget;
-        w->setObjectName("prowWrap");
-        QVBoxLayout* h = new QVBoxLayout(w);
-        h->setContentsMargins(0, 4, 0, 4);
-        h->setSpacing(3);
-        QLabel* b = new QLabel(QStringLiteral("建档状态"));
-        b->setObjectName("prowKey");
-        m_jd = new QLabel(QStringLiteral("未建档"));
-        m_jd->setObjectName("prowVal");
-        h->addWidget(b);
-        h->addWidget(m_jd);
-        c->addWidget(w);
+    // 四项统一堆叠式：标签在上（小灰）、值在下（加粗），逐项换行排列
+    const struct { const char* key; const char* val; } rows[] = {
+        {"姓名", "李建国"},
+        {"年龄", "52岁"},
+        {"医保账号", "DYB****8823"},
+        {"手机号", "139****6677"},
+    };
+    for (int i = 0; i < 4; ++i) {
+        QLabel* v = nullptr;
+        c->addWidget(uif::makeStackedRow(QString::fromUtf8(rows[i].key), QStringLiteral("prowWrap"),
+                                         QStringLiteral("prowKey"), QStringLiteral("prowVal"), &v));
+        if (v) v->setText(QString::fromUtf8(rows[i].val));
     }
     root->addWidget(card);
 
@@ -68,16 +39,4 @@ InfoPanel::InfoPanel(bool showPhone, bool showStatus, QWidget* parent) : QWidget
     connect(out, &QPushButton::clicked, this, &InfoPanel::logoutClicked);
     root->addWidget(out);
     root->addStretch();
-}
-
-void InfoPanel::setProfile(const QString& gm, const QString& jw)
-{
-    if (m_gm)  m_gm->setText(gm.isEmpty() ? QStringLiteral("—") : gm);
-    if (m_jw)  m_jw->setText(jw.isEmpty() ? QStringLiteral("—") : jw);
-}
-
-void InfoPanel::setJdDone(bool done)
-{
-    if (!m_jd) return;
-    m_jd->setText(done ? QStringLiteral("已建档") : QStringLiteral("未建档"));  // 纯文字，无胶囊样式切换
 }

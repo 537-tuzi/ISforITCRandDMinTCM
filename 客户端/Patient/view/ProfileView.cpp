@@ -160,8 +160,11 @@ ProfileView::ProfileView(QWidget* parent) : QWidget(parent)
 
 QWidget* ProfileView::makeRo(const QString& key, const QString& val)
 {
-    return uif::makeStackedRow(key, QStringLiteral("ro"),
-                               QStringLiteral("roKey"), QStringLiteral("roVal"), nullptr);
+    QLabel* v = nullptr;
+    QWidget* w = uif::makeStackedRow(key, QStringLiteral("ro"),
+                                     QStringLiteral("roKey"), QStringLiteral("roVal"), &v);
+    if (v) v->setText(val);
+    return w;
 }
 
 void ProfileView::appendAi(const QString& text)
@@ -216,12 +219,6 @@ void ProfileView::onSave()
     m_okNote->show();
     Toast::show(window(), QStringLiteral("档案已保存上传，正在返回首页…"));
     emit profileSaved(m_gm->toPlainText(), m_jw->toPlainText());
-}
-
-void ProfileView::setProfile(const QString& gm, const QString& jw)
-{
-    m_gm->setPlainText(gm);
-    m_jw->setPlainText(jw);
 }
 
 void ProfileView::scrollChatBottom()

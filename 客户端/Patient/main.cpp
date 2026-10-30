@@ -29,7 +29,6 @@ int main(int argc, char* argv[])
     app.setFont(QFont("Microsoft YaHei", 10));   // 全局微软雅黑
     loadStyle(app);
 
-    WinManager mgr;   // 统一管理窗口的创建/显示/隐藏/跳转
-    mgr.start();
+    WinManager::instance()->start();   // 单例：统一管理窗口的创建/显示/跳转
     return app.exec();
 }

@@ -1,6 +1,7 @@
 #include "Dialogs.h"
 #include "util/UiScale.h"
 #include "util/UIFactory.h"
+#include "util/AppDefs.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -18,7 +19,7 @@ static QList<QPushButton*> setupModal(QDialog* dlg, const QString& title, QWidge
                                       const QList<QPair<QString, QString>>& buttons,
                                       bool titleRed = false)
 {
-    dlg->setFixedWidth(qRound(560 * UiScale::current()));   // 随窗口缩放放大
+    dlg->setFixedWidth(qRound(def::MODAL_W * UiScale::current()));   // 随窗口缩放放大
     dlg->setObjectName("modal");
     QVBoxLayout* v = new QVBoxLayout(dlg);
     v->setContentsMargins(0, 0, 0, 0);

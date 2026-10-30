@@ -17,15 +17,16 @@ class HomeView : public QWidget
 public:
     explicit HomeView(QWidget* parent = nullptr);
 
-    void setProfile(const QString& gm, const QString& jw);
-    void setJdDone(bool done);
-    void setPanelWidth(int w);      // 窗口放大时左侧面板同步加宽
+    void setJdDone(bool done);      // 建档后入口转"我的档案"
     // 检测页挂号成功后，WinManager 调此接口同步到待办（autoBook=重症自动预约）
     void addAppointment(const pd::Appointment& appt, bool autoBook);
 
 signals:
     void cellClicked(pd::Page page);
     void logoutRequested();
+
+protected:
+    void resizeEvent(QResizeEvent* ev) override;   // 随窗口比例调面板宽
 
 private slots:
     void askCancel(int i);
@@ -41,4 +42,4 @@ private:
     QVector<pd::Appointment> m_todos;
 };
 
-#endif
+#endif // HOMEVIEW_H

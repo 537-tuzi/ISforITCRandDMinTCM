@@ -13,6 +13,9 @@
 #include <QFrame>
 #include <QRandomGenerator>
 #include <QEvent>
+#include <QResizeEvent>
+#include <QtGlobal>
+#include <QtMath>
 
 // 手册 3.3.4：五类舌象，灰黑苔>镜面舌>黄腻苔>白腻苔>薄白苔；灰黑苔/镜面舌重症触发自动预约
 static QVector<pd::DetectResult> detLib()
@@ -103,8 +106,8 @@ DetectView::DetectView(QWidget* parent) : QWidget(parent)
     root->setContentsMargins(4, 10, 12, 12);   // 左侧贴边，宽度让给右侧内容区
     root->setSpacing(8);
 
-    // ===== 左侧信息面板（三页统一齐全版：手机号+建档状态） =====
-    m_panel = new InfoPanel(true, true);
+    // ===== 左侧信息面板 =====
+    m_panel = new InfoPanel;
     connect(m_panel, &InfoPanel::logoutClicked, this, &DetectView::logoutClicked);
     root->addWidget(m_panel);
 
@@ -163,15 +166,6 @@ DetectView::DetectView(QWidget* parent) : QWidget(parent)
     m_start->setCursor(Qt::PointingHandCursor);
     connect(m_start, &QPushButton::clicked, this, &DetectView::onStart);
     cv->addWidget(m_start);
-
-    QWidget* stats = new QWidget;
-    QHBoxLayout* sth = new QHBoxLayout(stats);
-    sth->setContentsMargins(0, 0, 0, 0);
-    sth->setSpacing(8);
-    sth->addWidget(makeStat(QStringLiteral("舌苔类型"), &m_type), 1);
-    sth->addWidget(makeStat(QStringLiteral("健康状态"), &m_state), 1);
-    sth->addWidget(makeStat(QStringLiteral("置信度"),   &m_conf),  1);
-    cv->addWidget(stats);
     cols->addWidget(cam, 6);          // 中:右 ≈ 6:5 撑满可用宽度
 
     // ===== 右：报告列 =====
@@ -284,32 +278,14 @@ QWidget* DetectView::makeStep(int n, const QString& text)
     return w;
 }
 
-QFrame* DetectView::makeStat(const QString& title, QLabel** val)
+/* 窗口比例变化：按 UiScale 同一因子调整本页内部尺寸（面板宽） */
+void DetectView::resizeEvent(QResizeEvent* ev)
 {
-    QFrame* f = new QFrame;
-    f->setObjectName("stat");
-    QVBoxLayout* v = new QVBoxLayout(f);
-    v->setContentsMargins(8, 8, 8, 8);
-    QLabel* t = new QLabel(title);
-    t->setObjectName("statTitle");
-    t->setAlignment(Qt::AlignCenter);
-    QLabel* b = new QLabel(QStringLiteral("—"));
-    b->setObjectName("statVal");
-    b->setAlignment(Qt::AlignCenter);
-    v->addWidget(t);
-    v->addWidget(b);
-    *val = b;
-    return f;
+    QWidget::resizeEvent(ev);
+    if (!m_panel) return;
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    m_panel->setFixedWidth(qRound(def::PANEL_W * s));
 }
-
-void DetectView::setProfile(const QString& gm, const QString& jw)
-{ m_panel->setProfile(gm, jw); }   // MD §6.1：左面板过敏史/既往病史同步
-
-void DetectView::setJdDone(bool done)
-{ m_panel->setJdDone(done); }      // 左面板建档状态同步（三页一致）
-
-void DetectView::setPanelWidth(int w)
-{ m_panel->setFixedWidth(w); }
 
 /* 开始检测：演示 1.8s 返回（正式版：串口等待，超时 10s 可重发，见表 3） */
 void DetectView::onStart()
@@ -319,9 +295,6 @@ void DetectView::onStart()
     m_scanTimer->start(30);
     m_start->setEnabled(false);
     m_start->setText(QStringLiteral("正在检测，请保持不动…"));
-    m_type->setText(QStringLiteral("识别中"));
-    m_state->setText(QStringLiteral("…"));
-    m_conf->setText(QStringLiteral("…"));
 
     const QVector<pd::DetectResult> lib = detLib();
     const pd::DetectResult r = lib[m_detIdx];
@@ -330,15 +303,6 @@ void DetectView::onStart()
         m_scan->hide();
         m_start->setEnabled(true);
         m_start->setText(QStringLiteral("开始检测"));
-
-        m_type->setText(r.type);
-        m_conf->setText(r.conf);
-        m_state->setText(r.state);
-        m_state->setStyleSheet(r.sev == pd::Sev::Ok
-            ? QStringLiteral("color:%1;font-weight:700;").arg(def::CLR_PRESS)
-            : r.sev == pd::Sev::Red
-            ? QStringLiteral("color:%1;font-weight:700;").arg(def::CLR_WARN)
-            : QStringLiteral("color:%1;font-weight:700;").arg(def::CLR_TEXT));
 
         QString rep;
         foreach (const QString& x, r.rep) rep += QStringLiteral("· ") + x + QStringLiteral("<br>");
@@ -353,7 +317,6 @@ void DetectView::onStart()
         m_tipsBody->setText(tips);
         m_repNote->setVisible(r.autoBook);
         m_repCard->setObjectName(r.sev == pd::Sev::Red ? "cardRed" : "card");
-        m_tipsBody->setText(r.tips);
         m_tipsCard->setObjectName(r.sev == pd::Sev::Red ? "cardRed" : "card");
         m_repCard->style()->unpolish(m_repCard);
         m_repCard->style()->polish(m_repCard);
@@ -398,13 +361,9 @@ void DetectView::onReset()
                 .arg(lib[m_detIdx].type));
 }
 
-/* 结果区恢复默认态（三格/报告/建议/重症红边全部复位） */
+/* 结果区恢复默认态（报告/建议/重症红边全部复位） */
 void DetectView::clearResult()
 {
-    m_type->setText(QStringLiteral("—"));
-    m_state->setText(QStringLiteral("—"));
-    m_state->setStyleSheet(QString());
-    m_conf->setText(QStringLiteral("—"));
     m_repBody->setText(QStringLiteral("还没有检测结果，请点击「开始检测」。"));
     m_repNote->hide();
     m_tipsBody->setText(QStringLiteral("检测完成后，这里会根据您的舌头情况给出饮食、作息、调理建议。"));
