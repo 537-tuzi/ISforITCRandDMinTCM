@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <string.h>
 #include <signal.h>
 #include <lockzhiner_vision_module/edit/edit.h>
@@ -6,7 +6,12 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <lockzhiner_vision_module/core/logger.h>
+#include <lockzhiner_vision_module/periphery/usart/usart.h>
 #include <chrono>
+#include <ctime>
+#include <atomic>
+#include <thread>
+#include <unistd.h>
 #include "yolov8.h"
 #include "tongue_def.h" // ===== 阶段一新增：舌苔业务定义 =====
 #include "protocol.h"
@@ -30,6 +35,100 @@ extern int obj_class_num;
 char *lable;
 
 // ============================================================================
+// ===== 阶段B新增：串口收发与运行模式（D20-D25） =====
+// ============================================================================
+using lockzhiner_vision_module::periphery::USART1;
+static USART1 g_usart;                 // 串口对象（SDK 固定 /dev/ttyS1，D24 假设）
+std::atomic<int> g_mode{-1};           // D21：-1=从未收到指令→原连续检测逻辑；0停止/1仅播放/2单帧/3连续
+float g_conf_threshold = 80.0f;        // 有效置信度阈值（D25：0x40XX 运行时可调，tongue_def.h 声明）
+
+// 串口写 6 字节帧（线程安全：fd 全双工，与接收线程的 read 并发安全）
+static void send_frame(const unsigned char f[6])
+{
+    std::string s(reinterpret_cast<const char *>(f), 6);
+    g_usart.Write(s);
+}
+
+// D20/D22：独立线程收下行帧（usleep 20ms 轮询非阻塞读），解析后切模式/应答
+static void UsartRxThread()
+{
+    unsigned char half[4];
+    int have = 0;
+    while (true)
+    {
+        unsigned char buf[64];
+        int len = g_usart.Read(reinterpret_cast<char *>(buf), sizeof(buf));
+        if (len <= 0)
+        {
+            usleep(20000);   // D22：无数据歇 20ms
+            continue;
+        }
+        for (int i = 0; i < len; i++)
+        {
+            half[have++] = buf[i];
+            if (have < 4)
+                continue;
+            have = 0;
+            const int cmd = ParseDownFrame(half);
+            if (cmd < 0)
+            {
+                LOGGER_INFO("[串口] 非法帧 %02X %02X %02X %02X（丢弃）",
+                            half[0], half[1], half[2], half[3]);
+                continue;
+            }
+            unsigned char ack[6];
+            switch (cmd)
+            {
+            case CMD_STOP_VIDEO:
+            case CMD_PLAY_VIDEO:
+            case CMD_SINGLE_INFER:
+            case CMD_CONTINUE_INFER:
+                g_mode = (cmd == CMD_STOP_VIDEO) ? 0
+                       : (cmd == CMD_PLAY_VIDEO) ? 1
+                       : (cmd == CMD_SINGLE_INFER) ? 2 : 3;
+                printf("[串口] 指令 0x%04X → 模式%d\n", cmd, g_mode.load());
+                break;
+            case CMD_QUERY_STATUS:   // D25：状态查询应答
+                BuildAckFrame(0x00, 0x20,
+                              g_mode.load() < 0 ? 0xFF : (unsigned char)g_mode.load(), 0,
+                              ack);
+                send_frame(ack);
+                printf("[串口] 状态查询应答：mode=%d\n", g_mode.load());
+                break;
+            case CMD_QUERY_THRES:    // D25：阈值查询应答
+                BuildAckFrame(0x00, 0x30, 0x01, (unsigned char)(g_conf_threshold + 0.5f), ack);
+                send_frame(ack);
+                printf("[串口] 阈值查询应答：%.0f%%\n", g_conf_threshold);
+                break;
+            default:
+                if (IsSetThresholdCmd(cmd))   // D25：0x40XX 设定阈值并回显
+                {
+                    const int v = cmd & 0xFF;
+                    if (v >= 1 && v <= 100)
+                    {
+                        g_conf_threshold = (float)v;
+                        BuildAckFrame(0x40, (unsigned char)v, 0x01, (unsigned char)v, ack);
+                        send_frame(ack);
+                        printf("[串口] 阈值设定为 %d%%（0x40%02X 应答已发）\n", v, v);
+                    }
+                    else
+                    {
+                        LOGGER_INFO("[串口] 阈值越界 %d（1~100），忽略", v);
+                    }
+                }
+                else
+                {
+                    LOGGER_INFO("[串口] 未知指令 0x%04X（忽略）", cmd);
+                }
+                break;
+            }
+            fflush(stdout);
+        }
+    }
+}
+// ============================ 阶段B结束 ================================
+
+// ============================================================================
 // ===== 阶段一新增：舌苔结果解析与判定 =====
 // ============================================================================
 
@@ -38,6 +137,16 @@ char *lable;
 static bool judge_tongue_result(const object_detect_result_list &od_results,
                                 int class_num, TongueResult &out)
 {
+	// D1 终裁：结构体带时间戳/设备编号（所有路径统一填充）
+	memset(&out, 0, sizeof(out));
+	strncpy(out.device_id, TONGUE_DEVICE_ID, sizeof(out.device_id) - 1);
+	{
+		time_t now = time(nullptr);
+		struct tm tmv;
+		localtime_r(&now, &tmv);
+		strftime(out.timestamp, sizeof(out.timestamp), "%Y-%m-%d %H:%M:%S", &tmv);
+	}
+
 	// 无任何检测框
 	if (od_results.count <= 0)
 	{
@@ -76,8 +185,8 @@ static bool judge_tongue_result(const object_detect_result_list &od_results,
 		return false;
 	}
 
-	// T1.3：有效性判定（置信度 >= 80% 才有效）
-	if (conf < TONGUE_CONF_THRESHOLD)
+	// T1.3：有效性判定（置信度 >= 阈值才有效；阈值 0x40XX 可调，D25）
+	if (conf < g_conf_threshold)
 	{
 		out.valid = 0;
 		out.cls_id = det->cls_id;
@@ -104,8 +213,8 @@ static void print_tongue_result(const TongueResult &r)
 		if (r.cls_id >= 0)
 		{
 			// 有目标但置信度不足
-			printf("[舌苔检测] 类别=%s 置信度=%.1f%% 结论=无效(置信度不足%d%%)\n",
-			       TONGUE_NAMES[r.cls_id], r.confidence, (int)TONGUE_CONF_THRESHOLD);
+			printf("[舌苔检测] 类别=%s 置信度=%.1f%% 结论=无效(置信度不足%.0f%%)\n",
+			       TONGUE_NAMES[r.cls_id], r.confidence, g_conf_threshold);
 		}
 		else
 		{
@@ -113,10 +222,11 @@ static void print_tongue_result(const TongueResult &r)
 		}
 		return;
 	}
-	printf("[舌苔检测] 类别=%s 置信度=%.1f%% 健康=%s 重症=%s 结论=有效\n",
+	printf("[舌苔检测] 类别=%s 置信度=%.1f%% 健康=%s 重症=%s 结论=有效 时间=%s 设备=%s\n",
 	       TONGUE_NAMES[r.cls_id], r.confidence,
 	       r.health == 0 ? "是" : "否",
-	       r.severe == 1 ? "是" : "否");
+	       r.severe == 1 ? "是" : "否",
+	       r.timestamp, r.device_id);
 }
 // ============================ 阶段一新增结束 ================================
 
@@ -196,7 +306,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	printf("✅ 舌苔检测业务启动（5类别：灰黑苔/镜面舌/薄白苔/白腻苔/黄腻苔，有效阈值%.0f%%）\n",
-	       TONGUE_CONF_THRESHOLD);
+	       g_conf_threshold);
 	// ================================================
 	// ===== 阶段A：协议帧自测 =====
 	{
@@ -218,6 +328,17 @@ int main(int argc, char *argv[])
 		LOGGER_ERROR("init_post_process failed");
 		release_yolov8_model(&rknn_app_ctx);
 		return -1;
+	}
+
+	// ===== 阶段B：打开串口并启动接收线程（D23：失败仅日志、不影响单机推理） =====
+	if (g_usart.Open(115200))
+	{
+		std::thread(UsartRxThread).detach();   // D20：独立线程 + detach 常驻
+		printf("✅ 串口已打开 /dev/ttyS1@115200（指令线程已启动）\n");
+	}
+	else
+	{
+		LOGGER_ERROR("串口打开失败（/dev/ttyS1），仅单机模式运行");
 	}
 
 	// 打开摄像头
@@ -257,6 +378,21 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		cv::resize(frame, frame, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
+
+		// ===== 阶段B：按指令模式分流（-1 未收指令=原连续检测逻辑）=====
+		const int mode = g_mode.load();
+		if (mode == 0)
+		{
+			usleep(50000);   // 停止视频输出：不推理、不显示
+			continue;
+		}
+		if (mode == 1)
+		{
+			edit.Print(frame);   // 仅播放：显示画面，不推理、不发帧
+			usleep(30000);
+			continue;
+		}
+
 		cv::Mat letterboxImage = letterbox(frame);
 
 		if (letterboxImage.empty() || letterboxImage.total() * letterboxImage.elemSize() != model_width * model_height * 3)
@@ -287,6 +423,16 @@ int main(int argc, char *argv[])
 		                frame,
 		                mapCoordinates);
 
+		// D6（用户 2026-10-30 确认）：保留逐框打印
+		for (int i = 0; i < od_results.count; i++)
+		{
+			const object_detect_result *det = &od_results.results[i];
+			printf("[框%d] 类别=%s(%d) 置信度=%.1f%% 区域=(%d,%d)-(%d,%d)\n",
+			       i + 1, coco_cls_to_name(det->cls_id), det->cls_id,
+			       det->prop * 100.0f,
+			       det->box.left, det->box.top, det->box.right, det->box.bottom);
+		}
+
 		edit.Print(frame);
 
 		end = std::chrono::steady_clock::now();
@@ -307,6 +453,18 @@ int main(int argc, char *argv[])
 		{
 			retry_pending = false;
 			print_tongue_result(tres);
+		}
+
+		// ===== 阶段B：推理模式下组上行结果帧发送（回显触发指令码）=====
+		if (mode == 2 || mode == 3)
+		{
+			unsigned char up[6];
+			BuildUpFrame(mode == 2 ? 0x00 : 0x01, mode == 2 ? 0x10 : 0x00, tres, up);
+			send_frame(up);
+			printf("[串口] 上行 %02X %02X %02X %02X %02X %02X\n",
+			       up[0], up[1], up[2], up[3], up[4], up[5]);
+			if (mode == 2)
+				g_mode = 0;   // 单帧语义：一帧（含重试）完成后回到停止态
 		}
 		fflush(stdout);
 		// ============================ 改造结束 ==============================

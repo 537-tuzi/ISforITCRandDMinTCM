@@ -16,6 +16,25 @@ enum DownCmd {
     CMD_CONTINUE_INFER = 0x0100,  // 连续采集推理
 };
 
+// ==== 扩展指令（D25，手册 3.1.3 要求的参数校准/状态查询；帧结构沿用课程协议，
+//      自定码区避开课程已用值；最终编码以决策清单 D25 登记为准） ====
+#define CMD_QUERY_STATUS 0x0020  // 状态查询：上行回 数据1=g_mode(0xFF=未收指令) 数据2=设备状态(0正常)
+#define CMD_QUERY_THRES  0x0030  // 阈值查询：上行回 数据1=参数号(0x01 置信度阈值) 数据2=当前值(%)
+// 0x40XX 系列（CMD_H=0x40，CMD_L=阈值百分比 1~100）：设定置信度阈值，上行应答回显
+static int IsSetThresholdCmd(int cmd) { return (cmd & 0xFF00) == 0x4000; }
+
+// 通用上行应答帧（状态查询/参数校准复用；数据位即课程协议的类别/置信度两字节）
+static void BuildAckFrame(unsigned char cmd_h, unsigned char cmd_l,
+                          unsigned char d1, unsigned char d2, unsigned char out[6])
+{
+    out[0] = FRAME_HEAD_UP;
+    out[1] = cmd_h;
+    out[2] = cmd_l;
+    out[3] = d1;
+    out[4] = d2;
+    out[5] = FRAME_TAIL;
+}
+
 // 解析下行4字节帧：合法返回指令码，非法返回 -1
 static int ParseDownFrame(const unsigned char buf[4])
 {
