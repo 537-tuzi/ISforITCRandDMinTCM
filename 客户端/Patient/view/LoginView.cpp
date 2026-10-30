@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTimer>
+#include <QDateTime>
 
 LoginView::LoginView(QWidget* parent) : QWidget(parent)
 {
@@ -78,6 +79,7 @@ LoginView::LoginView(QWidget* parent) : QWidget(parent)
     bYb->setCursor(Qt::PointingHandCursor);
     connect(bYb, &QPushButton::clicked, this, &LoginView::doYbLogin);
     pyb->addWidget(bYb);
+    m_ybBtn = bYb;
     pyb->addStretch();
     m_panes->addWidget(py);
 
@@ -138,6 +140,8 @@ LoginView::LoginView(QWidget* parent) : QWidget(parent)
 
     m_cd = new QTimer(this);
     connect(m_cd, &QTimer::timeout, this, &LoginView::tickCountdown);
+    m_lockCd = new QTimer(this);
+    connect(m_lockCd, &QTimer::timeout, this, &LoginView::tickLockCountdown);
 
     connect(m_tabYb,  &QPushButton::clicked, this, [this] { switchTab(true); });
     connect(m_tabSms, &QPushButton::clicked, this, [this] { switchTab(false); });
@@ -155,9 +159,22 @@ void LoginView::switchTab(bool yb)
 /* 手册 3.3.1：
    密码为空 -> "请输入医保密码"
    密码错误 -> "医保密码错误，请重新输入"
-   连续 3 次 -> 锁定 15 分钟，提示按手册原文，并重置编辑框 */
+   连续 3 次 -> 锁定 15 分钟（按钮禁用+倒计时，真正禁登；提示语照手册原文），并重置编辑框 */
 void LoginView::doYbLogin()
 {
+    // 锁定期内直接拦下（按钮已禁用，此为双保险）
+    if (m_lockUntilSec > 0) {
+        const qint64 left = m_lockUntilSec - QDateTime::currentSecsSinceEpoch();
+        if (left > 0) {
+            Toast::show(this, QStringLiteral("医保登录已临时锁定，请 5 分钟后再尝试登录"), true);
+            return;
+        }
+        m_lockUntilSec = 0;
+    }
+    if (m_ybNo->text().isEmpty()) {
+        Toast::show(this, QStringLiteral("请输入医保卡号"));   // 实践填充（对照表·权限维度）
+        return;
+    }
     if (m_ybPw->text().isEmpty()) {
         Toast::show(this, QStringLiteral("请输入医保密码"));
         return;
@@ -168,6 +185,11 @@ void LoginView::doYbLogin()
             Toast::show(this, QStringLiteral("医保登录已临时锁定，请 5 分钟后再尝试登录"), true);
             resetFields();
             m_errCount = 0;
+            // 真正锁定：15 分钟禁登倒计时（时长口径见手册符合性对照表 终案 #7）
+            m_lockUntilSec = QDateTime::currentSecsSinceEpoch() + def::PWD_LOCK_MIN * 60;
+            m_lockCd->start(1000);
+            tickLockCountdown();   // 立即禁用，不等首个 tick
+            m_tabYb->click();   // 停在医保页展示禁用态
         } else {
             Toast::show(this, QStringLiteral("医保密码错误，请重新输入（还剩 %1 次机会）")
                         .arg(def::PWD_MAX_RETRY - m_errCount), true);
@@ -223,4 +245,21 @@ void LoginView::resetFields()
 {
     m_ybNo->clear();
     m_ybPw->clear();
+}
+
+/* 医保锁定倒计时：按钮禁用显示剩余时间，到期自动恢复（手册 3.3.1 锁定 15 分钟） */
+void LoginView::tickLockCountdown()
+{
+    const qint64 left = m_lockUntilSec - QDateTime::currentSecsSinceEpoch();
+    if (left <= 0) {
+        m_lockCd->stop();
+        m_lockUntilSec = 0;
+        m_ybBtn->setEnabled(true);
+        m_ybBtn->setText(QStringLiteral("登 录"));
+        return;
+    }
+    m_ybBtn->setEnabled(false);
+    m_ybBtn->setText(QStringLiteral("已锁定 %1:%2")
+                     .arg(left / 60, 2, 10, QLatin1Char('0'))
+                     .arg(left % 60, 2, 10, QLatin1Char('0')));
 }

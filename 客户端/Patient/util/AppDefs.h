@@ -38,6 +38,7 @@ constexpr int TOAST_VISIBLE_MS = 3200;  // toast 停留时长
 constexpr int TOAST_FADE_MS    = 500;   // toast 淡出时长
 constexpr int SMS_RESEND_S     = 60;    // 验证码重发倒计时（秒）
 constexpr int PWD_MAX_RETRY    = 3;     // 医保密码最大错误次数
+constexpr int PWD_LOCK_MIN     = 15;    // 病人医保登录锁定时长·分钟（手册 3.3.1）
 
 // ---- 通用小函数 ----
 // 挂号单号：GH202610XXX（XXX=100~999 随机）

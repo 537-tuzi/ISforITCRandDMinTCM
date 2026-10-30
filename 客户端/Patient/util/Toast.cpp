@@ -3,14 +3,17 @@
 #include <QLabel>
 #include <QTimer>
 #include <QStyle>
+#include <QPointer>
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
 
 namespace {
 // 全局单条提示：持续触发（条件不符反复点击）时每次 show 重置计时即常显；
 // 停止触发 3.2s 后 500ms 淡出消失。不再多条追加叠放。
-QLabel* g_toast = nullptr;
-QTimer* g_hide = nullptr;          // 停止触发后开始淡出
+// g_toast 用 QPointer：挂到栈上弹窗（&dlg）时弹窗销毁会连带销毁 toast，
+// QPointer 自动置空，下次 show 走重建分支，杜绝悬垂指针。
+QPointer<QLabel> g_toast;
+QTimer* g_hide = nullptr;          // 停止触发后开始淡出（g_toast 子对象，随之销毁）
 QPropertyAnimation* g_fade = nullptr;
 }
 
