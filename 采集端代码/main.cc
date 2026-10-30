@@ -232,9 +232,15 @@ static void print_tongue_result(const TongueResult &r)
 
 int main(int argc, char *argv[])
 {
-	if (argc != 4)
+	// 第 5 参可传 "headless"：跳过显示服务（Edit 的 accept 会阻塞等待
+	// “凌智助手”客户端连接 6868 端口，无人连接时程序挂起——联调/自检场景
+	// 用 headless 直接进检测循环，只走串口输出）
+	bool headless = false;
+	if (argc == 5 && strcmp(argv[4], "headless") == 0)
+		headless = true;
+	if (argc != 4 && !headless)
 	{
-		LOGGER_INFO("Usage: %s ./model_path class_count ./label_txt", argv[0]);
+		LOGGER_INFO("Usage: %s ./model_path class_count ./label_txt [headless]", argv[0]);
 		return -1;
 	}
 	obj_class_num = atoi(argv[2]);
@@ -341,12 +347,19 @@ int main(int argc, char *argv[])
 		LOGGER_ERROR("串口打开失败（/dev/ttyS1），仅单机模式运行");
 	}
 
-	// 打开摄像头
+	// 打开摄像头与显示服务（headless 模式跳过显示，避免 accept 阻塞）
 	lockzhiner_vision_module::edit::Edit edit;
-	if (!edit.StartAndAcceptConnection())
+	if (!headless)
 	{
-		std::cerr << "Error: Failed to start and accept connection." << std::endl;
-		return EXIT_FAILURE;
+		if (!edit.StartAndAcceptConnection())
+		{
+			std::cerr << "Error: Failed to start and accept connection." << std::endl;
+			return EXIT_FAILURE;
+		}
+	}
+	else
+	{
+		printf("ℹ️ headless 模式：跳过显示服务（纯检测+串口输出）\n");
 	}
 
 	cv::VideoCapture cap;
@@ -388,7 +401,8 @@ int main(int argc, char *argv[])
 		}
 		if (mode == 1)
 		{
-			edit.Print(frame);   // 仅播放：显示画面，不推理、不发帧
+			if (!headless)
+				edit.Print(frame);   // 仅播放：显示画面，不推理、不发帧
 			usleep(30000);
 			continue;
 		}
@@ -433,7 +447,8 @@ int main(int argc, char *argv[])
 			       det->box.left, det->box.top, det->box.right, det->box.bottom);
 		}
 
-		edit.Print(frame);
+		if (!headless)
+			edit.Print(frame);
 
 		end = std::chrono::steady_clock::now();
 		double elapsed_time = std::chrono::duration<double>(end - start).count();
