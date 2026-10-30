@@ -1,0 +1,292 @@
+/* ============================================================
+   病人端 QSS —— 800×640 适老大字版（登录窗口贴内容）
+   4 色制：暖白 #fafaf7 / 墨绿 #2e5e50 / 朱砂 #b23b2e / 墨黑 #262620
+   字号原则：容器不溢出前提下的最大值，空白尽量撑满
+   通过 resources.qrc 编译进 exe，任何工作目录均生效
+   ============================================================ */
+
+/* ---------- 全局（字体统一微软雅黑，2026-10-30 决定） ---------- */
+* {
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    color:#262620;
+}
+QWidget#mainWin, QWidget#authPanel,
+QWidget#pageHome, QWidget#pageJd, QWidget#pageDetect, QWidget#pageRecord {
+    background:#fafaf7;
+}
+QToolTip {
+    background:#33332c; color:#ffffff; border:none;
+    padding:4px 9px; font-size:13px;
+}
+
+/* ==================== 登录窗口（卡片即窗口，无多余空白） ==================== */
+#authBox { background:#ffffff; border:1px solid #e5e3da; border-radius:12px; }
+#authTitle {
+    font-size:32px; font-weight:700; color:#262620;
+    background:transparent; padding:0 0 4px 0;
+}
+#loginTab {
+    background:transparent; border:none;
+    border-bottom:2.5px solid transparent;
+    font-size:18px; font-weight:600; color:#5f5f56;
+    padding:8px 3px 7px 3px;
+}
+#loginTab:hover { color:#234b40; }
+#loginTab:checked { color:#234b40; border-bottom-color:#2e5e50; }
+
+#fldLabel { font-size:15.5px; font-weight:700; color:#5f5f56; background:transparent; }
+QLineEdit, QPlainTextEdit {
+    background:#ffffff; border:1.5px solid #d5d2c6; border-radius:9px;
+    min-height:44px; padding:3px 14px; font-size:17px; color:#262620;
+    selection-background-color:#e7f0ea; selection-color:#234b40;
+}
+QLineEdit:hover, QPlainTextEdit:hover { border-color:#2e5e50; }
+QLineEdit:focus, QPlainTextEdit:focus { border:2px solid #2e5e50; }
+QLineEdit::placeholder, QPlainTextEdit::placeholder { color:#a9a698; }
+#tip  { font-size:14.5px; color:#74746a; background:transparent; }
+#hint { font-size:14.5px; color:#74746a; background:transparent; }
+
+/* ==================== 按钮（主 19px/52px；大 21px/60px；小 16px/44px） ==================== */
+#btnPri, #btnOut {
+    font-size:19px; font-weight:700; padding:0 24px; min-height:52px;
+}
+#btnPri {
+    background:#2e5e50; color:#ffffff; border:none; border-radius:9px;
+}
+#btnPri:hover { background:#234b40; }
+#btnPri:pressed { background:#1c3b32; }
+#btnOut {
+    background:#ffffff; color:#262620;
+    border:1.5px solid #d5d2c6; border-radius:9px;
+}
+#btnOut:hover { border-color:#2e5e50; color:#234b40; }
+#btnOut:pressed { background:#fafaf7; }
+
+#btnPriLg {
+    background:#2e5e50; color:#ffffff; border:none; border-radius:10px;
+    font-size:21px; font-weight:700; padding:0 28px; min-height:60px;
+}
+#btnPriLg:hover { background:#234b40; }
+#btnPriLg:pressed { background:#1c3b32; }
+
+#btnOutSm {
+    background:#ffffff; color:#262620;
+    border:1.5px solid #d5d2c6; border-radius:8px;
+    font-size:16px; font-weight:700; padding:0 16px; min-height:44px;
+}
+#btnOutSm:hover { border-color:#2e5e50; color:#234b40; }
+#btnOutSm:pressed { background:#fafaf7; }
+#btnOut:disabled, #btnOutSm:disabled, #btnOutSmDis {
+    background:#f7f8f4; color:#a9a698; border-color:#e5e3da;
+}
+
+#btnDangerO {
+    background:#ffffff; color:#b23b2e;
+    border:1.5px solid #e0b3a8; border-radius:9px;
+    font-size:18px; font-weight:700; padding:0 20px; min-height:48px;
+}
+#btnDangerO:hover { background:#fbeeea; }
+#btnDangerO:pressed { background:#f3d9d4; }
+
+#btnDangerLg {
+    background:#b23b2e; color:#262620; border:none; border-radius:10px;
+    font-size:20px; font-weight:700; padding:0 16px; min-height:54px;
+}
+#btnDangerLg:hover { background:#9e3226; }
+#btnDangerLg:pressed { background:#8a2b20; }
+
+#btnLink {
+    background:transparent; border:none; color:#b23b2e;
+    font-size:16px; font-weight:600; border-radius:7px; padding:4px 8px;
+}
+#btnLink:hover { background:#fbeeea; }
+
+/* ==================== 顶部导航条（导航 26px，撑满导航条） ==================== */
+#topbar { background:#2e5e50; }
+#navIt {
+    background:transparent; color:#d7e4dc; border:none; border-radius:8px;
+    font-size:26px; font-weight:600; padding:0 22px; min-height:48px;
+}
+#navIt:hover { background:rgba(255,255,255,.14); color:#ffffff; }
+#navIt[cur="true"] { background:#fafaf7; color:#234b40; }
+#uchipName {
+    color:#ffffff; font-size:26px; font-weight:600;
+    background:transparent; padding:0 8px;   /* 字号对齐导航按钮 */
+}
+
+/* ==================== 左侧个人信息面板（190px，值长自动换行） ==================== */
+#pcard { background:#ffffff; border:1px solid #e5e3da; border-radius:10px; }
+#pname { font-size:20px; font-weight:700; color:#262620; background:transparent; }
+#psub  { font-size:15px; color:#74746a; background:transparent; }
+#prowWrap { background:transparent; border-bottom:1px solid #f0efe8; }
+#prowKey { font-size:15.5px; font-weight:600; color:#5f5f56; background:transparent; }
+#prowVal { font-size:17px; font-weight:600; color:#262620; background:transparent; }
+
+/* ---------- 状态胶囊（圆点+文字双通道） ---------- */
+#pillOk {
+    background:#e7f0ea; color:#234b40; border-radius:12px;
+    padding:2px 10px; font-size:15px; font-weight:600;
+}
+#pillGray {
+    background:#efeee8; color:#5f5f56; border-radius:12px;
+    padding:2px 10px; font-size:15px; font-weight:600;
+}
+#pillSoon {
+    background:#ffffff; color:#b23b2e;
+    border:1.5px solid #b23b2e; border-radius:12px;
+    padding:1px 9px; font-size:15px; font-weight:600;
+}
+
+/* ==================== 卡片通用（标题 20px） ==================== */
+#card    { background:#ffffff; border:1px solid #e5e3da; border-radius:10px; }
+#cardRed { background:#ffffff; border:1.5px solid #e4b7ac; border-radius:10px; }
+#chBar   { background:transparent; border-bottom:1px solid #e5e3da; }
+#chTitle { font-size:20px; font-weight:700; color:#262620; background:transparent; }
+#chSub   { font-size:15px; color:#74746a; background:transparent; }
+#chSubDark { font-size:15px; color:#7f978b; background:transparent; }
+
+/* ==================== 首页四宫格（标题 38px / 描述 20px，无图标块） ==================== */
+#cell    { background:#ffffff; border:1.5px solid #e5e3da; border-radius:10px; }
+#cell:hover { border-color:#2e5e50; }
+#cellStatic { background:#ffffff; border:1px solid #e5e3da; border-radius:10px; }
+#cellTitle {
+    font-size:38px; font-weight:700; color:#262620;
+    background:transparent;
+}
+#cellDesc { font-size:20px; color:#5f5f56; background:transparent; }
+
+/* 待办事项行（第一行 科室·医生18px + 胶囊；第二行 日期 时间20px加粗 + 取消） */
+#trow { background:transparent; border-bottom:1px dashed #e5e3da; }
+#t1b  { font-size:20px; font-weight:700; color:#262620; background:transparent; }
+#tdoc { font-size:18px; font-weight:600; color:#33332c; background:transparent; }
+#apptEmpty { font-size:15.5px; color:#74746a; background:transparent; }
+
+/* ==================== 建档页（只读值 17px 加粗） ==================== */
+#ro { background:transparent; border-bottom:1px solid #e5e3da; }
+#roKey { font-size:15.5px; font-weight:600; color:#5f5f56; background:transparent; }
+#roVal { font-size:17px; font-weight:700; color:#262620; background:transparent; }
+#okb {
+    background:#e7f0ea; color:#234b40; border-radius:8px;
+    padding:8px 12px; font-size:16.5px; font-weight:600;
+}
+#live    { color:#234b40; font-size:15px; font-weight:700; background:transparent; }
+#liveDot { color:#2e9e6b; font-size:15px; font-weight:700; background:transparent; }
+
+/* AI 聊天气泡 */
+#aiScroll { border:none; background:#f7f8f4; }
+#aiBody   { background:#f7f8f4; }
+#msgAi {
+    background:#e7f0ea; color:#234b40; border-radius:10px;
+    padding:10px 14px; font-size:17px;
+}
+#msgMe {
+    background:#2e5e50; color:#ffffff; border-radius:10px;
+    padding:10px 14px; font-size:17px;
+}
+#hold {
+    background:#2e5e50; color:#ffffff; border:none; border-radius:28px;
+    font-size:19px; font-weight:700; padding:0 28px; min-height:58px;
+}
+#hold:hover { background:#234b40; }
+#hold:pressed { background:#1c3b32; }
+
+/* ==================== 检测页（步骤 19px / 结果值 21px） ==================== */
+#stepN {
+    background:#2e5e50; color:#ffffff; border-radius:17px;
+    font-size:18px; font-weight:700;
+}
+#stepTxt { font-size:19px; font-weight:700; color:#262620; background:transparent; }
+#screen { background:#1c2b24; border-radius:10px; }
+#screenTxt { color:#7f978b; font-size:15px; background:transparent; }
+#wm { font-size:56px; background:transparent; }
+#scanline { background:#78ddb4; border-radius:1px; }
+#ctl { background:transparent; border-top:3px solid #78ddb4; border-left:3px solid #78ddb4; }
+#ctr { background:transparent; border-top:3px solid #78ddb4; border-right:3px solid #78ddb4; }
+#cbl { background:transparent; border-bottom:3px solid #78ddb4; border-left:3px solid #78ddb4; }
+#cbr { background:transparent; border-bottom:3px solid #78ddb4; border-right:3px solid #78ddb4; }
+#stat { background:#f7f8f4; border:1px solid #e5e3da; border-radius:8px; }
+#statTitle { font-size:15px; color:#74746a; background:transparent; }
+#statVal   { font-size:21px; font-weight:700; color:#262620; background:transparent; }
+#repBody { font-size:17px; color:#33332c; background:transparent; }
+
+/* 提示条（红=警示 / 绿=说明） */
+#noteRed {
+    background:#fbeeea; color:#b23b2e;
+    border:1px solid #eec7bf; border-radius:8px;
+    padding:8px 12px; font-size:16.5px;
+}
+#noteGreen {
+    background:#e7f0ea; color:#234b40;
+    border:1px solid #cfe0d3; border-radius:8px;
+    padding:8px 12px; font-size:16.5px;
+}
+
+/* ==================== 记录页（表格 17px / 表头 15.5px / 明细 17px） ==================== */
+#liRow { background:transparent; border-bottom:1px solid #e5e3da; }
+#liKey { font-size:15.5px; font-weight:600; color:#5f5f56; background:transparent; }
+#liVal { font-size:17px; color:#262620; background:transparent; }
+#liValRed { font-size:17px; color:#b23b2e; background:transparent; }
+#pagerTxt { font-size:15.5px; color:#5f5f56; background:transparent; }
+#phCard { background:#ffffff; border:1px solid #e5e3da; border-radius:8px; }
+#phCardDark { background:#1c2b24; border-radius:8px; }
+
+#tb {
+    background:#ffffff; border:none;
+    font-size:15.5px; color:#262620;
+    gridline-color:transparent;
+    alternate-background-color:#f7f8f4;
+}
+#tb QHeaderView::section {
+    background:#f4f3ec; color:#5f5f56;
+    font-size:14.5px; font-weight:700;
+    border:none; border-bottom:2px solid #e5e3da;
+    padding:7px 3px;
+}
+#tb::item { padding:7px 3px; border-bottom:1px solid #e5e3da; }
+#tb::item:selected { background:#e7f0ea; color:#234b40; }
+#tb::item:hover { background:#f7f8f4; }
+
+/* ==================== 弹窗（600px，正文 18px） ==================== */
+#modal { background:#ffffff; border:1px solid #e5e3da; border-radius:12px; }
+#mHead { background:transparent; border-bottom:1px solid #e5e3da; }
+#mTitle    { font-size:20px; font-weight:700; color:#262620; background:transparent; }
+#mTitleRed { font-size:20px; font-weight:700; color:#b23b2e; background:transparent; }
+#mBody { background:transparent; }
+#mFoot { background:transparent; border-top:1px solid #e5e3da; }
+#mText { font-size:18px; color:#262620; background:transparent; }
+
+QComboBox {
+    background:#ffffff; color:#262620;
+    border:1.5px solid #d5d2c6; border-radius:9px;
+    min-height:44px; padding:3px 14px; font-size:17px;
+}
+QComboBox:hover { border-color:#2e5e50; }
+QComboBox:focus { border:2px solid #2e5e50; }
+QComboBox QAbstractItemView {
+    background:#ffffff; border:1px solid #e5e3da;
+    font-size:17px; color:#262620;
+    selection-background-color:#e7f0ea; selection-color:#234b40;
+    outline:none;
+}
+
+/* ==================== toast（24px，屏幕居中，停止触发后淡出） ==================== */
+#toast {
+    background:#33332c; color:#ffffff; border-radius:13px;
+    padding:17px 36px; font-size:24px; font-weight:600;
+}
+#toastWarn {
+    background:#b23b2e; color:#ffffff; border-radius:13px;
+    padding:17px 36px; font-size:24px; font-weight:600;
+}
+
+/* ==================== 滚动条 ==================== */
+QScrollBar:vertical { background:transparent; width:8px; margin:0; }
+QScrollBar::handle:vertical { background:#d5d2c6; border-radius:4px; min-height:24px; }
+QScrollBar::handle:vertical:hover { background:#2e5e50; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background:transparent; }
+QScrollBar:horizontal { background:transparent; height:8px; margin:0; }
+QScrollBar::handle:horizontal { background:#d5d2c6; border-radius:4px; min-width:24px; }
+QScrollBar::handle:horizontal:hover { background:#2e5e50; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width:0; }
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background:transparent; }
