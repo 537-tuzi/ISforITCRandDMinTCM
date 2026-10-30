@@ -9,7 +9,7 @@
 #include <chrono>
 #include "yolov8.h"
 #include "tongue_def.h" // ===== 阶段一新增：舌苔业务定义 =====
-
+#include "protocol.h"
 // output img size
 #define DISP_WIDTH 640
 #define DISP_HEIGHT 480
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 
 		if (model_class_num > 0 && obj_class_num != model_class_num)
 		{
-			LOGGER_INFO("Class count mismatch, use model class count %d instead of arg %d", 
+			LOGGER_INFO("Class count mismatch, use model class count %d instead of arg %d",
 			            model_class_num, obj_class_num);
 			obj_class_num = model_class_num;
 		}
@@ -198,7 +198,20 @@ int main(int argc, char *argv[])
 	printf("✅ 舌苔检测业务启动（5类别：灰黑苔/镜面舌/薄白苔/白腻苔/黄腻苔，有效阈值%.0f%%）\n",
 	       TONGUE_CONF_THRESHOLD);
 	// ================================================
-
+	// ===== 阶段A：协议帧自测 =====
+	{
+		TongueResult demo;
+		demo.valid = 1;
+		demo.cls_id = 2;            // 薄白苔
+		demo.confidence = 92.0f;    // 92% → 0x5C
+		unsigned char f[6];
+		BuildUpFrame(0x00, 0x10, demo, f);   // 假装回显 0x0010 指令
+		printf("[协议自测] 期望: 5B 00 10 02 5C A5 | 实际: ");
+		for (int i = 0; i < 6; i++)
+			printf("%02X ", f[i]);
+		printf("\n");
+		fflush(stdout);
+	}
 	// 加载标签文件（在确定最终类别数之后）
 	if (init_post_process() != 0)
 	{
