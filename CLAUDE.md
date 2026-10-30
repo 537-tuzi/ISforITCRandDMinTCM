@@ -27,6 +27,8 @@ D:\qt6\6.11.1\mingw_64\bin\qmake.exe Patient.pro -spec win32-g++
 mingw32-make            # 或 mingw32-make debug / release；通常直接用 Qt Creator 打开 Patient.pro
 ```
 
+医生端+管理员端（`客户端/Staff/`，同一工程按角色分流，演示工号 100001 管理员 / 100002~100004 医生，密码 123456）构建方式相同：`cd 客户端\Staff` 后 `qmake Staff.pro` + `mingw32-make`；util 层与 Patient 同构（Toast/UiScale/UIFactory/AppDefs/StaffTypes）。
+
 - 需把 `D:\qt6\Tools\mingw1310_64\bin` 加入 PATH，否则 g++ 找不到 `cc1plus`
 - **qmake 的 Makefile 不跟踪 style.qss 依赖**：改动 `.qss` 后 `rcc` 不会重跑，exe 里仍是旧样式。改样式后须删除 `release/qrc_resources.cpp`、`debug/qrc_resources.cpp`（或重跑 qmake）再编译；改 `.pro` 文件清单后也须重跑 qmake
 
