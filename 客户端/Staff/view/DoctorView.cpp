@@ -1,4 +1,5 @@
-#include "DoctorView.h"
+﻿#include "DoctorView.h"
+#include "Dialogs.h"
 #include "util/Toast.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,67 +13,6 @@
 #include <QFrame>
 #include <QHeaderView>
 #include <QRegularExpression>
-
-/* ==================== 弹窗骨架（Dialogs.cpp setupModal 同款，本文件自备） ==================== */
-
-static QList<QPushButton*> setupModal(QDialog* dlg, const QString& title, QWidget* body,
-                                      const QList<QPair<QString, QString>>& buttons)
-{
-    dlg->setFixedWidth(560);
-    dlg->setObjectName("modal");
-    QVBoxLayout* v = new QVBoxLayout(dlg);
-    v->setContentsMargins(0, 0, 0, 0);
-    v->setSpacing(0);
-
-    QWidget* head = new QWidget;
-    head->setObjectName("mHead");
-    QHBoxLayout* hl = new QHBoxLayout(head);
-    hl->setContentsMargins(18, 10, 18, 10);
-    QLabel* t = new QLabel(title);
-    t->setObjectName("mTitle");
-    hl->addWidget(t);
-    hl->addStretch();
-    v->addWidget(head);
-
-    QWidget* b = new QWidget;
-    b->setObjectName("mBody");
-    QVBoxLayout* bv = new QVBoxLayout(b);
-    bv->setContentsMargins(18, 12, 18, 12);
-    bv->addWidget(body);
-    v->addWidget(b, 1);
-
-    QWidget* foot = new QWidget;
-    foot->setObjectName("mFoot");
-    QHBoxLayout* fl = new QHBoxLayout(foot);
-    fl->setContentsMargins(18, 10, 18, 10);
-    fl->addStretch();
-    QList<QPushButton*> made;
-    foreach (auto btn, buttons) {
-        QPushButton* pb = new QPushButton(btn.first);
-        pb->setObjectName(btn.second);
-        pb->setCursor(Qt::PointingHandCursor);
-        fl->addWidget(pb);
-        made.append(pb);
-    }
-    v->addWidget(foot);
-    return made;
-}
-
-/* 确认弹窗：标题+正文+取消/确认（重置密码、删除共用） */
-static bool confirmModal(QWidget* parent, const QString& title, const QString& text)
-{
-    QDialog dlg(parent);
-    QLabel* body = new QLabel(text);
-    body->setObjectName("mText");
-    body->setWordWrap(true);
-    QList<QPair<QString, QString>> btns;
-    btns << qMakePair(QStringLiteral("取消"), QStringLiteral("btnOut"))
-         << qMakePair(QStringLiteral("确认"), QStringLiteral("btnPri"));
-    const QList<QPushButton*> made = setupModal(&dlg, title, body, btns);
-    dlg.connect(made.at(0), &QPushButton::clicked, &dlg, &QDialog::reject);
-    dlg.connect(made.at(1), &QPushButton::clicked, &dlg, &QDialog::accept);
-    return dlg.exec() == QDialog::Accepted;
-}
 
 /* 医师信息弹窗：cur 为空=新增、非空=编辑（工号只读显示）；校验通过把表单值写回 out 并返回 true */
 static bool doctorModal(QWidget* parent, const sdt::DoctorRow* cur, sdt::DoctorRow* out)

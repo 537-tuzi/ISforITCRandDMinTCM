@@ -1,4 +1,4 @@
-#include "StatsView.h"
+﻿#include "StatsView.h"
 #include "util/Toast.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -16,6 +16,11 @@
 #include <algorithm>
 
 // ==================== 自绘条形图 ====================
+
+// 医生统计行顺序对应的科室名（表格与 CSV 导出共用，防两处漂移）
+static const QStringList kDeptNames = { QStringLiteral("中医内科"),
+                                        QStringLiteral("中医内科"),
+                                        QStringLiteral("针灸推拿科") };
 void BarChart::setData(const QVector<int>& vals, const QStringList& names)
 {
     m_vals = vals;
@@ -201,8 +206,7 @@ void StatsView::refresh()
     r.doctor = QStringLiteral("王医生"); r.total = 35 * k; r.done = 33 * k; m_rows.append(r);
 
     int sumT = 0, sumD = 0;
-    QStringList depts = { QStringLiteral("中医内科"), QStringLiteral("中医内科"),
-                          QStringLiteral("针灸推拿科") };
+    const QStringList& depts = kDeptNames;
     m_table->setRowCount(m_rows.size());
     for (int i = 0; i < m_rows.size(); ++i) {
         const sdt::StatRow& s = m_rows[i];
@@ -241,8 +245,7 @@ void StatsView::exportCsv()
     QTextStream ts(&f);                  // Qt6 默认 UTF-8
     ts.setGenerateByteOrderMark(true);
     ts << QStringLiteral("医生,科室,问诊数,已完成,接诊率\n");
-    const QStringList depts = { QStringLiteral("中医内科"), QStringLiteral("中医内科"),
-                                QStringLiteral("针灸推拿科") };
+    const QStringList& depts = kDeptNames;
     for (int i = 0; i < m_rows.size(); ++i) {
         const sdt::StatRow& s = m_rows[i];
         const int rate = s.total ? s.done * 100 / s.total : 0;

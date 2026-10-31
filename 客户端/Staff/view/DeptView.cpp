@@ -1,4 +1,5 @@
-#include "DeptView.h"
+﻿#include "DeptView.h"
+#include "Dialogs.h"
 #include "util/Toast.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,50 +13,6 @@
 #include <QTableWidgetItem>
 #include <QHeaderView>
 #include <QBrush>
-
-/* 本页弹窗骨架（Dialogs.cpp 同款） */
-static QList<QPushButton*> setupModal(QDialog* dlg, const QString& title, QWidget* body,
-                                      const QList<QPair<QString, QString>>& buttons)
-{
-    dlg->setFixedWidth(560);
-    dlg->setObjectName("modal");
-    QVBoxLayout* v = new QVBoxLayout(dlg);
-    v->setContentsMargins(0, 0, 0, 0);
-    v->setSpacing(0);
-
-    QWidget* head = new QWidget;
-    head->setObjectName("mHead");
-    QHBoxLayout* hl = new QHBoxLayout(head);
-    hl->setContentsMargins(18, 10, 18, 10);
-    QLabel* t = new QLabel(title);
-    t->setObjectName("mTitle");
-    hl->addWidget(t);
-    hl->addStretch();
-    v->addWidget(head);
-
-    QWidget* b = new QWidget;
-    b->setObjectName("mBody");
-    QVBoxLayout* bv = new QVBoxLayout(b);
-    bv->setContentsMargins(18, 12, 18, 12);
-    bv->addWidget(body);
-    v->addWidget(b, 1);
-
-    QWidget* foot = new QWidget;
-    foot->setObjectName("mFoot");
-    QHBoxLayout* fl = new QHBoxLayout(foot);
-    fl->setContentsMargins(18, 10, 18, 10);
-    fl->addStretch();
-    QList<QPushButton*> made;
-    foreach (auto btn, buttons) {
-        QPushButton* pb = new QPushButton(btn.first);
-        pb->setObjectName(btn.second);
-        pb->setCursor(Qt::PointingHandCursor);
-        fl->addWidget(pb);
-        made.append(pb);
-    }
-    v->addWidget(foot);
-    return made;
-}
 
 DeptView::DeptView(QWidget* parent) : QWidget(parent)
 {

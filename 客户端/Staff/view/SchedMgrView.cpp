@@ -1,4 +1,5 @@
 #include "SchedMgrView.h"
+#include "Dialogs.h"
 #include "util/Toast.h"
 #include "util/AppDefs.h"
 #include <QVBoxLayout>
@@ -15,21 +16,19 @@
 #include <QBrush>
 #include <QDate>
 
-/* 演示排班原文（医生|星期几0-6|班次1-3|已约/上限），新增排班也追加于此 */
-static QStringList g_cells = {
-    QStringLiteral("张主任|0|1|3/20"),
-    QStringLiteral("张主任|2|2|0/20"),
-    QStringLiteral("张主任|3|3|5/20"),
-    QStringLiteral("李医生|0|3|1/20"),
-    QStringLiteral("李医生|1|1|0/20"),
-    QStringLiteral("王医生|1|2|2/20"),
-    QStringLiteral("王医生|4|1|0/20"),
-};
-
 SchedMgrView::SchedMgrView(QWidget* parent) : QWidget(parent)
 {
     setObjectName("pageSmgr");
-    m_allCells = g_cells;
+    // 演示排班原文（医生|星期几0-6|班次1-3|已约/上限），新增排班也追加于此
+    m_allCells = QStringList{
+        QStringLiteral("张主任|0|1|3/20"),
+        QStringLiteral("张主任|2|2|0/20"),
+        QStringLiteral("张主任|3|3|5/20"),
+        QStringLiteral("李医生|0|3|1/20"),
+        QStringLiteral("李医生|1|1|0/20"),
+        QStringLiteral("王医生|1|2|2/20"),
+        QStringLiteral("王医生|4|1|0/20"),
+    };
 
     QVBoxLayout* root = new QVBoxLayout(this);
     root->setContentsMargins(12, 10, 12, 12);
@@ -226,36 +225,7 @@ void SchedMgrView::onAddSched()
     QList<QPair<QString, QString>> btns;
     btns << qMakePair(QStringLiteral("取消"), QStringLiteral("btnOut"))
          << qMakePair(QStringLiteral("确认添加"), QStringLiteral("btnPri"));
-    // 弹窗骨架
-    dlg.setFixedWidth(560);
-    dlg.setObjectName("modal");
-    QVBoxLayout* v = new QVBoxLayout(&dlg);
-    v->setContentsMargins(0, 0, 0, 0);
-    v->setSpacing(0);
-    QWidget* hd = new QWidget; hd->setObjectName("mHead");
-    QHBoxLayout* hl = new QHBoxLayout(hd);
-    hl->setContentsMargins(18, 10, 18, 10);
-    QLabel* t = new QLabel(QStringLiteral("添加排班")); t->setObjectName("mTitle");
-    hl->addWidget(t); hl->addStretch();
-    v->addWidget(hd);
-    QWidget* bb = new QWidget; bb->setObjectName("mBody");
-    QVBoxLayout* bbv = new QVBoxLayout(bb);
-    bbv->setContentsMargins(18, 12, 18, 12);
-    bbv->addWidget(body);
-    v->addWidget(bb, 1);
-    QWidget* ft = new QWidget; ft->setObjectName("mFoot");
-    QHBoxLayout* fl = new QHBoxLayout(ft);
-    fl->setContentsMargins(18, 10, 18, 10);
-    fl->addStretch();
-    QList<QPushButton*> made;
-    foreach (auto b, btns) {
-        QPushButton* pb = new QPushButton(b.first);
-        pb->setObjectName(b.second);
-        pb->setCursor(Qt::PointingHandCursor);
-        fl->addWidget(pb);
-        made.append(pb);
-    }
-    v->addWidget(ft);
+    const QList<QPushButton*> made = setupModal(&dlg, QStringLiteral("添加排班"), body, btns);
 
     dlg.connect(made[0], &QPushButton::clicked, &dlg, &QDialog::reject);
     dlg.connect(made[1], &QPushButton::clicked, &dlg, [&]() {
@@ -273,7 +243,6 @@ void SchedMgrView::onAddSched()
         const QString cellText = QStringLiteral("%1|%2|%3|0/%4")
                                  .arg(doc).arg(day).arg(sh).arg(spMax->value());
         m_allCells << cellText;
-        g_cells = m_allCells;
         Toast::show(window(), QStringLiteral("排班已添加：%1 %2 %3（上限 %4）")
                     .arg(doc, cbDay->currentText(), cbShift->currentText())
                     .arg(spMax->value()));

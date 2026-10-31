@@ -1,4 +1,4 @@
-#include "LogView.h"
+﻿#include "LogView.h"
 #include "util/Toast.h"
 #include "util/AppDefs.h"
 #include <QVBoxLayout>

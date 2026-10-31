@@ -1,4 +1,4 @@
-#include "LoginView.h"
+﻿#include "LoginView.h"
 #include "util/Toast.h"
 #include "util/AppDefs.h"
 #include "util/StaffTypes.h"

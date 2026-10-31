@@ -8,9 +8,9 @@
 #include <QPushButton>
 #include <QRegularExpression>
 
-/* 通用弹窗骨架（与 Patient 工程同款：标题+正文+底部按钮，返回按钮列表由调用方接线） */
-static QList<QPushButton*> setupModal(QDialog* dlg, const QString& title, QWidget* body,
-                                      const QList<QPair<QString, QString>>& buttons)
+/* 通用弹窗骨架（全工程单点维护，各页共用；返回按钮列表由调用方接线） */
+QList<QPushButton*> setupModal(QDialog* dlg, const QString& title, QWidget* body,
+                               const QList<QPair<QString, QString>>& buttons)
 {
     dlg->setFixedWidth(560);
     dlg->setObjectName("modal");
@@ -57,6 +57,22 @@ static QPushButton* findBtn(const QList<QPushButton*>& list, const char* name)
     foreach (QPushButton* b, list)
         if (b->objectName() == QLatin1String(name)) return b;
     return nullptr;
+}
+
+/* 确认弹窗：标题+正文+取消/确认（重置密码、删除、清空等共用） */
+bool confirmModal(QWidget* parent, const QString& title, const QString& text)
+{
+    QDialog dlg(parent);
+    QLabel* body = new QLabel(text);
+    body->setObjectName("mText");
+    body->setWordWrap(true);
+    QList<QPair<QString, QString>> btns;
+    btns << qMakePair(QStringLiteral("取消"), QStringLiteral("btnOut"))
+         << qMakePair(QStringLiteral("确认"), QStringLiteral("btnPri"));
+    const QList<QPushButton*> made = setupModal(&dlg, title, body, btns);
+    dlg.connect(made.at(0), &QPushButton::clicked, &dlg, &QDialog::reject);
+    dlg.connect(made.at(1), &QPushButton::clicked, &dlg, &QDialog::accept);
+    return dlg.exec() == QDialog::Accepted;
 }
 
 /* 修改密码：原密码/新密码/确认新密码 三框（演示比对 123456；正式版走服务端） */

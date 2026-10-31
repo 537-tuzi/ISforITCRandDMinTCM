@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+﻿#include "MainWindow.h"
 #include "ApptListView.h"
 #include "DiagnoseView.h"
 #include "HistoryView.h"
@@ -38,8 +38,6 @@ MainWindow::MainWindow(int role, const QString& workNo, const QString& name, QWi
                                                   : QStringLiteral("舌苔诊疗 · 医生端"));
     brand->setObjectName("uchipName");
     bh->addWidget(brand);
-
-    m_navs.clear();
     if (role == sdt::Doctor) {
         bh->addWidget(makeNav(QStringLiteral("预约患者"), sdt::Page::ApptList));
         bh->addWidget(makeNav(QStringLiteral("问诊开方"), sdt::Page::Diagnose));
@@ -102,16 +100,19 @@ QPushButton* MainWindow::makeNav(const QString& text, sdt::Page page)
 
 void MainWindow::setCurrent(sdt::Page page)
 {
-    int idx = m_stack->indexOf(page == sdt::Page::ApptList  ? (QWidget*)m_appt
-                            : page == sdt::Page::Diagnose  ? (QWidget*)m_diag
-                            : page == sdt::Page::History   ? (QWidget*)m_hist
-                            : page == sdt::Page::MySchedule? (QWidget*)m_sched
-                            : page == sdt::Page::Doctors   ? (QWidget*)m_docs
-                            : page == sdt::Page::Depts     ? (QWidget*)m_depts
-                            : page == sdt::Page::SchedMgr  ? (QWidget*)m_smgr
-                            : page == sdt::Page::Stats     ? (QWidget*)m_stats
-                                                           : (QWidget*)m_logs);
-    m_stack->setCurrentIndex(idx);
+    QWidget* w = nullptr;
+    switch (page) {
+    case sdt::Page::ApptList:   w = m_appt;  break;
+    case sdt::Page::Diagnose:   w = m_diag;  break;
+    case sdt::Page::History:    w = m_hist;  break;
+    case sdt::Page::MySchedule: w = m_sched; break;
+    case sdt::Page::Doctors:    w = m_docs;  break;
+    case sdt::Page::Depts:      w = m_depts; break;
+    case sdt::Page::SchedMgr:   w = m_smgr;  break;
+    case sdt::Page::Stats:      w = m_stats; break;
+    case sdt::Page::Logs:       w = m_logs;  break;
+    }
+    if (w) m_stack->setCurrentWidget(w);
     foreach (QPushButton* b, m_navs) {
         b->setProperty("cur", b->property("page").toInt() == int(page));
         b->style()->unpolish(b);
