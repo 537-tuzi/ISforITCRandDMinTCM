@@ -7,6 +7,8 @@
 //   0:灰黑苔  1:镜面舌  2:薄白苔  3:白腻苔  4:黄腻苔
 // ============================================================================
 
+#include <atomic>
+
 enum TongueClass
 {
     TONGUE_HUI_HEI   = 0, // 灰黑苔
@@ -20,8 +22,9 @@ static const char *TONGUE_NAMES[5] = {
     "灰黑苔", "镜面舌", "薄白苔", "白腻苔", "黄腻苔"};
 
 // 有效置信度阈值（百分制，项目手册默认 >=80% 判定为有效结果）。
-// D25：运行时可调——串口扩展指令 0x40XX 设定阈值 XX%（定义在 main.cc）
-extern float g_conf_threshold;
+// D25：运行时可调——串口扩展指令 0x40XX 设定阈值 XX%（定义在 main.cc）。
+// atomic：串口接收线程写 / 主循环读，跨线程访问消除数据竞争 UB
+extern std::atomic<float> g_conf_threshold;
 
 // 健康状态：0-健康 1-病体（薄白苔=健康，其余=病体）
 inline int tongue_health(int cls)

@@ -27,6 +27,7 @@ int height = DISP_HEIGHT;
 int model_width = 640;
 int model_height = 640;
 
+// letterbox 边距（注意：SDK 侧 yolov8.cc 的 letterbox() extern 引用本变量，不可删除）
 int leftPadding;
 int topPadding;
 
@@ -38,9 +39,9 @@ char *lable;
 // ===== 阶段B新增：串口收发与运行模式（D20-D25） =====
 // ============================================================================
 using lockzhiner_vision_module::periphery::USART1;
-static USART1 g_usart;                 // 串口对象（SDK 固定 /dev/ttyS1，D24 假设）
+static USART1 g_usart;                 // 串口对象（SDK 固定 /dev/ttyS1，D24 已确认）
 std::atomic<int> g_mode{-1};           // D21：-1=从未收到指令→原连续检测逻辑；0停止/1仅播放/2单帧/3连续
-float g_conf_threshold = 80.0f;        // 有效置信度阈值（D25：0x40XX 运行时可调，tongue_def.h 声明）
+std::atomic<float> g_conf_threshold{80.0f};  // 有效置信度阈值（D25 可调；rx 线程写/主循环读，atomic 消竞争）
 
 // 串口写 6 字节帧（线程安全：fd 全双工，与接收线程的 read 并发安全）
 static void send_frame(const unsigned char f[6])
@@ -68,14 +69,20 @@ static void UsartRxThread()
             half[have++] = buf[i];
             if (have < 4)
                 continue;
-            have = 0;
             const int cmd = ParseDownFrame(half);
             if (cmd < 0)
             {
-                LOGGER_INFO("[串口] 非法帧 %02X %02X %02X %02X（丢弃）",
+                // 帧失步恢复：丢 1 字节左滑，保留后 3 字节继续找帧头 0x5A，
+                // 避免丢 1 字节后永久错位（非法组也打日志）
+                LOGGER_INFO("[串口] 非法帧 %02X %02X %02X %02X（滑窗重同步）",
                             half[0], half[1], half[2], half[3]);
+                half[0] = half[1];
+                half[1] = half[2];
+                half[2] = half[3];
+                have = 3;
                 continue;
             }
+            have = 0;
             unsigned char ack[6];
             switch (cmd)
             {
@@ -96,9 +103,9 @@ static void UsartRxThread()
                 printf("[串口] 状态查询应答：mode=%d\n", g_mode.load());
                 break;
             case CMD_QUERY_THRES:    // D25：阈值查询应答
-                BuildAckFrame(0x00, 0x30, 0x01, (unsigned char)(g_conf_threshold + 0.5f), ack);
+                BuildAckFrame(0x00, 0x30, 0x01, (unsigned char)(g_conf_threshold.load() + 0.5f), ack);
                 send_frame(ack);
-                printf("[串口] 阈值查询应答：%.0f%%\n", g_conf_threshold);
+                printf("[串口] 阈值查询应答：%.0f%%\n", g_conf_threshold.load());
                 break;
             default:
                 if (IsSetThresholdCmd(cmd))   // D25：0x40XX 设定阈值并回显
@@ -214,7 +221,7 @@ static void print_tongue_result(const TongueResult &r)
 		{
 			// 有目标但置信度不足
 			printf("[舌苔检测] 类别=%s 置信度=%.1f%% 结论=无效(置信度不足%.0f%%)\n",
-			       TONGUE_NAMES[r.cls_id], r.confidence, g_conf_threshold);
+			       TONGUE_NAMES[r.cls_id], r.confidence, g_conf_threshold.load());
 		}
 		else
 		{
@@ -312,7 +319,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	printf("✅ 舌苔检测业务启动（5类别：灰黑苔/镜面舌/薄白苔/白腻苔/黄腻苔，有效阈值%.0f%%）\n",
-	       g_conf_threshold);
+	       g_conf_threshold.load());
 	// ================================================
 	// ===== 阶段A：协议帧自测 =====
 	{
@@ -388,9 +395,12 @@ int main(int argc, char *argv[])
 		if (frame.empty())
 		{
 			LOGGER_INFO("❌ Failed to read frame from camera.\n");
+			usleep(100000);   // 断流防刷屏：100ms 后再取
 			continue;
 		}
-		cv::resize(frame, frame, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
+		// 摄像头已配置 640×480：同尺寸时跳过恒等重采样（省 1~2ms/帧）
+		if (frame.cols != width || frame.rows != height)
+			cv::resize(frame, frame, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
 
 		// ===== 阶段B：按指令模式分流（-1 未收指令=原连续检测逻辑）=====
 		const int mode = g_mode.load();
@@ -432,10 +442,14 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		draw_detections(od_results.count,
-		                od_results.results,
-		                frame,
-		                mapCoordinates);
+		// headless：无显示输出，跳过画框（省 ~0.3ms/帧）；逐框打印与判定/上行帧不受影响
+		if (!headless)
+		{
+			draw_detections(od_results.count,
+			                od_results.results,
+			                frame,
+			                mapCoordinates);
+		}
 
 		// D6（用户 2026-10-30 确认）：保留逐框打印
 		for (int i = 0; i < od_results.count; i++)
