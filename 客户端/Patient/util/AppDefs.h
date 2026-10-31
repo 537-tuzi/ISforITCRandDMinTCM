@@ -8,10 +8,10 @@
 namespace def {
 
 // ---- 配色（与 style.qss 的 4 色制一致，供代码内联样式使用）----
-inline const char* const CLR_MAIN  = "#2e5e50"; // 墨绿（主色）
 inline const char* const CLR_PRESS = "#234b40"; // 墨绿按压/健康
-inline const char* const CLR_WARN  = "#b23b2e"; // 朱砂（警示/重症）
-inline const char* const CLR_TEXT  = "#262620"; // 墨黑（正文）
+
+// ---- 布局基准 ----
+constexpr qreal DESIGN_W = 800.0;   // 设计稿宽度（缩放因子 = 宽/DESIGN_W）
 
 // ---- 演示数据常量（手册演示脚本）----
 inline const QString DEMO_SECRET  = QStringLiteral("123456");          // 演示密码/验证码

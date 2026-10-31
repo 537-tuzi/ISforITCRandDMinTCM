@@ -1,4 +1,4 @@
-#include "RecordView.h"
+﻿#include "RecordView.h"
 #include "InfoPanel.h"
 #include "util/Toast.h"
 #include "Dialogs.h"
@@ -14,8 +14,6 @@
 #include <QHeaderView>
 #include <QBrush>
 #include <QResizeEvent>
-#include <QtGlobal>
-#include <QtMath>
 
 RecordView::RecordView(QWidget* parent) : QWidget(parent)
 {
@@ -153,7 +151,7 @@ void RecordView::resizeEvent(QResizeEvent* ev)
 {
     QWidget::resizeEvent(ev);
     if (!m_panel || !m_table) return;
-    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / def::DESIGN_W);
     m_panel->setFixedWidth(qRound(def::PANEL_W * s));
     applyRowHeight(qRound(def::TBL_ROW_H * s));
 }
@@ -204,7 +202,7 @@ void RecordView::initTable()
             }
             QTableWidgetItem* it = new QTableWidgetItem(txt);
             it->setTextAlignment(Qt::AlignCenter);
-            it->setForeground(QBrush(rows[i].done ? QColor("#5f5f56") : QColor("#234b40")));
+            it->setForeground(QBrush(rows[i].done ? QColor("#5f5f56") : QColor(def::CLR_PRESS)));
             m_table->setItem(i, c, it);
         }
         QWidget* btnHost = new QWidget;

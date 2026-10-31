@@ -1,4 +1,4 @@
-#include "winmanager.h"
+﻿#include "winmanager.h"
 #include "view/LoginView.h"
 #include "view/MainWindow.h"
 #include "view/HomeView.h"
@@ -42,7 +42,7 @@ void WinManager::onLoginSucceeded()
     m_login->hide();
     m_main->show();
     // 主窗可能处于放大几何（上次最大化后登出），恢复对应缩放因子
-    UiScale::apply(def::FONT_COMP * qMax<qreal>(1.0, m_main->width() / 800.0));
+    UiScale::apply(def::FONT_COMP * qMax<qreal>(1.0, m_main->width() / def::DESIGN_W));
     m_main->setCurrent(needJd ? pd::Page::Jd : pd::Page::Home);
 }
 

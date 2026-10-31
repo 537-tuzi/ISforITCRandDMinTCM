@@ -1,4 +1,4 @@
-#include "HomeView.h"
+﻿#include "HomeView.h"
 #include "InfoPanel.h"
 #include "util/Toast.h"
 #include "util/Speak.h"
@@ -11,8 +11,6 @@
 #include <QPushButton>
 #include <QLayout>
 #include <QResizeEvent>
-#include <QtGlobal>
-#include <QtMath>
 
 HomeView::HomeView(QWidget* parent) : QWidget(parent)
 {
@@ -192,7 +190,7 @@ void HomeView::resizeEvent(QResizeEvent* ev)
 {
     QWidget::resizeEvent(ev);
     if (!m_panel) return;
-    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / def::DESIGN_W);
     m_panel->setFixedWidth(qRound(def::PANEL_W * s));
 }
 

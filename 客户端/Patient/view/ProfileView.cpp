@@ -151,7 +151,6 @@ ProfileView::ProfileView(QWidget* parent) : QWidget(parent)
     afl->addWidget(hold, 0, Qt::AlignHCenter);
     av->addWidget(af);
 
-    hold->setAutoRepeat(false);
     connect(hold, &QPushButton::released, this, &ProfileView::onHoldReleased);
 
     root->addWidget(card, 0);

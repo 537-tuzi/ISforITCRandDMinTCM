@@ -196,7 +196,6 @@ QLineEdit::placeholder, QPlainTextEdit::placeholder { color:#a9a698; }
 #stepTxt { font-size:19px; font-weight:700; color:#262620; background:transparent; }
 #screen { background:#1c2b24; border-radius:10px; }
 #screenTxt { color:#7f978b; font-size:15px; background:transparent; }
-#wm { font-size:56px; background:transparent; }
 #scanline { background:#78ddb4; border-radius:1px; }
 #ctl { background:transparent; border-top:3px solid #78ddb4; border-left:3px solid #78ddb4; }
 #ctr { background:transparent; border-top:3px solid #78ddb4; border-right:3px solid #78ddb4; }

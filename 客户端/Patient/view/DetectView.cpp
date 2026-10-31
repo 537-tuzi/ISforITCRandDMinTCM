@@ -1,4 +1,4 @@
-#include "DetectView.h"
+﻿#include "DetectView.h"
 #include "InfoPanel.h"
 #include "util/Toast.h"
 #include "Dialogs.h"
@@ -11,11 +11,8 @@
 #include <QTimer>
 #include <QStyle>
 #include <QFrame>
-#include <QRandomGenerator>
 #include <QEvent>
 #include <QResizeEvent>
-#include <QtGlobal>
-#include <QtMath>
 
 // 手册 3.3.4：五类舌象，灰黑苔>镜面舌>黄腻苔>白腻苔>薄白苔；灰黑苔/镜面舌重症触发自动预约
 static QVector<pd::DetectResult> detLib()
@@ -283,7 +280,7 @@ void DetectView::resizeEvent(QResizeEvent* ev)
 {
     QWidget::resizeEvent(ev);
     if (!m_panel) return;
-    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / def::DESIGN_W);
     m_panel->setFixedWidth(qRound(def::PANEL_W * s));
 }
 
@@ -296,7 +293,7 @@ void DetectView::onStart()
     m_start->setEnabled(false);
     m_start->setText(QStringLiteral("正在检测，请保持不动…"));
 
-    const QVector<pd::DetectResult> lib = detLib();
+    static const QVector<pd::DetectResult> lib = detLib();   // 只读数据，首次构造后复用（与 onReset 同策略）
     const pd::DetectResult r = lib[m_detIdx];
     QTimer::singleShot(def::DETECT_ANIM_MS, this, [this, r] {
         m_scanTimer->stop();

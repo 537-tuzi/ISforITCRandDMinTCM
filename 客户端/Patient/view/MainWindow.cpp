@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+﻿#include "MainWindow.h"
 #include "HomeView.h"
 #include "ProfileView.h"
 #include "DetectView.h"
@@ -29,7 +29,6 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
     bh->setContentsMargins(16, 0, 16, 0);
     bh->setSpacing(10);
 
-    m_navs.clear();
     QPushButton* nHome = makeNav(QStringLiteral("首页"), pd::Page::Home);
     m_navJd            = makeNav(QStringLiteral("初次建档"), pd::Page::Jd);
     QPushButton* nDet  = makeNav(QStringLiteral("舌苔检测"), pd::Page::Detect);
@@ -107,7 +106,7 @@ void MainWindow::resizeEvent(QResizeEvent* ev)
 {
     QWidget::resizeEvent(ev);
     if (!m_bar) return;                  // 构造早期的 resize，成员未就绪
-    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / 800.0);
+    const qreal s = def::FONT_COMP * qMax<qreal>(1.0, width() / def::DESIGN_W);
     if (qAbs(s - UiScale::current()) > 0.02)   // 阈值防拖拽抖动频繁重排
         UiScale::apply(s);
     m_bar->setFixedHeight(qRound(def::TOPBAR_H * s));

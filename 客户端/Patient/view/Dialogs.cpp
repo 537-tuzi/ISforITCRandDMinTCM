@@ -1,4 +1,4 @@
-#include "Dialogs.h"
+﻿#include "Dialogs.h"
 #include "util/UiScale.h"
 #include "util/UIFactory.h"
 #include "util/AppDefs.h"
